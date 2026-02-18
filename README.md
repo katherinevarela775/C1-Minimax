@@ -1,4 +1,4 @@
-# C1-Minimax
+ C1-Minimax
 Proyecto: El Laberinto del Gato y el Ratón (Minimax) 🐭🐱
 
 Introducción y Reto:
@@ -36,5 +36,5 @@ Descarga el archivo minimax.py.
 Ejecuta el comando: Bash python minimax.py
 Observa cómo la IA resuelve el laberinto en un mapa de 10x10.
 
-# Este proyecto solo utiliza la Librería Estándar de Python.
-# No se requieren dependencias externas.
+Este proyecto solo utiliza la Librería Estándar de Python.
+No se requieren dependencias externas.
