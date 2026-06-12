@@ -113,3 +113,31 @@ def dibujar(datos, turn):
             else:
                 texto_fila += datos["tablero"][f][c] + " " # Realiza una concatenacion de las cadenas que contienen los pisos y la de esta funcion
         print(texto_fila) 
+
+
+def jugar(): 
+    """ Es el bucle principal del juego, alterna turnos, gestiona la cantidad de los mismos y verificas estados. """
+    juego = generar_juego(tamano=10) # Crea el tablero y coloca a los personajes
+    historial = {} # Diccionario
+    
+    for turn in range(1, 61): 
+        estado = (tuple(juego["pos_gato"]), tuple(juego["pos_raton"])) # Convierte la lista de coord. de cada personaje y las convierte en tuplas, para poder agg. al diccionario
+        historial[estado] = historial.get(estado, 0) + 1 # Aqui busca variable estado, si existe +1, y le pone la cond. de que si no encuentra nada simplemente devuelva 0
+        if historial[estado] >= 5: 
+            dibujar(juego, turn); print("\n🤝 EMPATE: Bucle detectado."); return
+
+        dibujar(juego, turn) 
+        mover_ia(juego, True) # Turno del raton
+        if juego["pos_raton"] == juego["salida"]: # Accede a esa info desde juego, ya que la funcion generar_juego te retorna un dicc. cuando se cumple
+            dibujar(juego, turn); print("\n🏁 VICTORIA: El ratón escapó."); return 
+            
+        dibujar(juego, turn) 
+        time.sleep(0.5) 
+        mover_ia(juego, False) # Turno del gato
+        if juego["pos_gato"] == juego["pos_raton"]:
+            dibujar(juego, turn); print("\n⚔️ DERROTA: El gato atrapó al ratón."); return
+    dibujar(juego, turn)
+    print("\n⏰ TIEMPO AGOTADO: El ratón se cansó y el gato se durmió.")
+
+
+jugar()
