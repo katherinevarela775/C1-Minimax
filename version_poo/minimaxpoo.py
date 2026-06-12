@@ -39,4 +39,11 @@ class Laberinto:
                 if vecino not in visitados: # Si la posicion no se encuentra en visitados la agrega y tambien a la lista de cola para revisarla a profundidad
                     visitados.append(vecino)
                     cola.append(vecino)
-        return False # Si la lista de cola se vacia y nunca llegamos al fin, el codigo devuelve false, lo que significa que no hayo una salida en este mapagit 
+        return False # Si la lista de cola se vacia y nunca llegamos al fin, el codigo devuelve false, lo que significa que no encontro una salida en este mapa
+    
+    def colocar_quesos(self, seguras): # Esta funcion recibe la lista de seguras para saber donde tiene prohibido actuar
+        self.quesos = [] # Se coloca la lista nuevamente dentro de la funcion para asegurarnos que la misma esta vacia
+        while len(self.quesos) < 3: # El bucle se ejecuta hasta que hayan 3 quessos ubicados en el mapa
+            q = [random.randint(0, self.tamano-1), random.randint(0, self.tamano-1)] # Aqui elige coordenadas al azar para ubicar los quesos y utiliza randint(0, tamano-1) para que los mismos se ubiquen dentro de los limites del mapa
+            if q not in self.paredes and q not in seguras and q not in self.quesos: # Aqui hay una validacion triple de no haya una pared en ese lugar, no sea una zona prohibida y que tampoco haya ya un queso en esa posicion
+                self.quesos.append(q) # Si pasa la triple validacion se agrega a la lista
