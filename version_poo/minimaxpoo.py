@@ -10,7 +10,7 @@ class Laberinto:
         self.paredes = []
         self.memoria_raton = [] # Historial para evitar bucles
         self.generar_mapa()
-        
+
     def generar_mapa(self):
         """Arquitecto del laberinto: coloca paredes y quesos asegurando solución."""
         while True:
@@ -27,3 +27,16 @@ class Laberinto:
             if self.existe_camino(self.pos_raton, self.salida): # Si el mapa es jugable esta validacion agrega los quesos al mapa y se rompe el bucle de generacion
                 self.colocar_quesos(seguras)
                 break
+    
+    def existe_camino(self, inicio, fin):
+        """Inspector: Algoritmo BFS para garantizar conectividad."""
+        cola = [inicio] # Es donde se almacenan las posiciones que no se revisaron a profundidad (en las cuatro direcciones adyacentes)
+        visitados = [inicio] # Es la lista donde se almacenan todas las coordenadas que ya itero o "visito"
+
+        for actual in cola: # Sirve para ir revisando los caminos a lo largo del mapa
+            if actual == fin: return True # Si al momento de iterar el mapa llega a la posicion de la salida la iteracion termina
+            for vecino in self.movimientos_posibles(actual, [], es_gato=False): # Desde el punto en el que se encuentra, mira a las 4 direcciones posibles y la funcion de movimientos posibles filtara las paredes y bordes
+                if vecino not in visitados: # Si la posicion no se encuentra en visitados la agrega y tambien a la lista de cola para revisarla a profundidad
+                    visitados.append(vecino)
+                    cola.append(vecino)
+        return False # Si la lista de cola se vacia y nunca llegamos al fin, el codigo devuelve false, lo que significa que no hayo una salida en este mapagit 
