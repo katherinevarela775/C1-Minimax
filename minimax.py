@@ -97,3 +97,19 @@ def mover_ia(datos, es_raton):
 
     else:
         datos["pos_gato"] = mejor_mov 
+
+def dibujar(datos, turn): 
+    """ Es el motor de Renderizado, limpia la consola e imprime los diseños. """ # Explicar por que decidi hacerlo aparte
+    os.system('cls' if os.name == 'nt' else 'clear') # Limpia la consola
+    print(f" TURNO: {turn} | MODO:  IA vs IA ".center(datos["tamano"]*3, "═")) 
+
+    for f in range(datos["tamano"]): 
+        texto_fila = "" 
+        for c in range(datos["tamano"]): 
+            coord_a_revisar = [f, c] # Representa la coord. actual que esta siendo iterada
+            if coord_a_revisar == datos["pos_gato"]: texto_fila += "🐱 "
+            elif coord_a_revisar == datos["pos_raton"]: texto_fila += "🐭 " 
+            elif coord_a_revisar == datos["salida"]: texto_fila += "🚪 "
+            else:
+                texto_fila += datos["tablero"][f][c] + " " # Realiza una concatenacion de las cadenas que contienen los pisos y la de esta funcion
+        print(texto_fila) 
