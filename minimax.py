@@ -19,3 +19,18 @@ def existe_camino(inicio, fin, tamano, tablero):
             if vecina not in visitados:
                 visitados.append(vecina); cola.append(vecina) 
     return False 
+
+def generar_juego(tamano):
+    """Configura el estado inicial del mundo, unicamente la parte estatica del nivel""" # Explicacion del renderizado aparte
+    gato, raton, salida = [0, 1], [tamano-1, tamano-1], [0, 0] 
+    while True:
+        tablero = [["⬜" for _ in range(tamano)] for _ in range(tamano)] 
+        restringidas = [[0,0], [0,1], [1,0], [1,1], gato, raton] 
+        
+        for paredes in range((tamano ** 2) // 5): # En un rango proporcional a la sup. total de mi tablero
+            filas, colum = random.randint(0, tamano-1), random.randint(0, tamano-1)
+            if [filas, colum] not in restringidas: 
+                tablero[filas][colum] = "⬛" 
+        
+        if existe_camino(raton, salida, tamano, tablero): 
+            return {"tamano": tamano, "pos_gato": gato, "pos_raton": raton, "salida": salida, "tablero": tablero, "memoria": []} # Diccionario con
