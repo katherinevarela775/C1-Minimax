@@ -69,3 +69,31 @@ def minimax(datos, prof, es_max):
         else: datos["pos_gato"] = pos_original
 
     return mejor_valor # Resultado de la comparacion de max y min
+
+def mover_ia(datos, es_raton): 
+    """Aplica la mejor decisión del Minimax al mundo real y actualiza los estados de los personajes."""
+    yo = datos["pos_raton"] if es_raton else datos["pos_gato"] 
+    otro = datos["pos_gato"] if es_raton else datos["pos_raton"]
+    mejor_mov, mejor_punt = yo, (float('-inf') if es_raton else float('inf')) 
+
+    for movimiento in movimientos_posibles(yo, otro, datos["tamano"], datos["tablero"], not es_raton):
+        pos_original = tuple(yo) #Backtracking
+
+        if es_raton: datos["pos_raton"] = movimiento 
+        else: datos["pos_gato"] = movimiento
+
+        simulacion = minimax(datos, 3 if es_raton else 4, not es_raton) # Aqui llamamos a la funcion minimax con la prof. de 3 para el raton y de 4 para el gato
+
+        if (es_raton and simulacion > mejor_punt) or (not es_raton and simulacion < mejor_punt): # Aqui comparamos el resultado de la sim. con el mejor puntaje
+            mejor_punt, mejor_mov = simulacion, movimiento # Si el valor es mejor, lo guardamos
+
+        if es_raton: datos["pos_raton"] = pos_original 
+        else: datos["pos_gato"] = pos_original
+            
+    if es_raton: 
+        datos["pos_raton"] = mejor_mov # Una vez termino el bucle tomamos las decis. final y movemos la pieza a mejor_m
+        datos["memoria"].append(tuple(mejor_mov))
+        if len(datos["memoria"]) > 5: datos["memoria"].pop(0) 
+
+    else:
+        datos["pos_gato"] = mejor_mov 
