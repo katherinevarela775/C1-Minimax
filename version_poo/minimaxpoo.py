@@ -47,3 +47,36 @@ class Laberinto:
             q = [random.randint(0, self.tamano-1), random.randint(0, self.tamano-1)] # Aqui elige coordenadas al azar para ubicar los quesos y utiliza randint(0, tamano-1) para que los mismos se ubiquen dentro de los limites del mapa
             if q not in self.paredes and q not in seguras and q not in self.quesos: # Aqui hay una validacion triple de no haya una pared en ese lugar, no sea una zona prohibida y que tampoco haya ya un queso en esa posicion
                 self.quesos.append(q) # Si pasa la triple validacion se agrega a la lista
+
+    def movimientos_posibles(self, pos, oponente, es_gato=True): # Esta funcion recibe los datos de la posicion, la posicion del oponente y la de cual personaje pregunta
+        """Reglas de física del juego: a dónde se puede mover un agente."""
+        opciones = [] # Aqui se guardan los caminos legales a medida que se va explorando los alrededores
+        for df, dc in [(-1,0), (1,0), (0,-1), (0,1)]: # Aqui se definen las 4 direcciones en las que se pueden mover y las ira probando una a una
+            nueva_pos = [pos[0]+df, pos[1]+dc] # Es un simulacro de que pasaria si me mueve hacia arriba 
+            if 0 <= nueva_pos[0] < self.tamano and 0 <= nueva_pos[1] < self.tamano:# Esta validacion camprueba de que la posicion no se salga del tablero
+                if nueva_pos not in self.paredes: # Validacion de si existe una pared en esa posicion
+                    if not es_gato and nueva_pos == oponente: continue # Aqui lo que hace es que en caso de ser el raton y querer moverse a la posicion del gato, el continue hace que pase a otra posicion 
+                    opciones.append(nueva_pos) # Si el movimiento paso todas las validaciones se guarda en opciones
+        return opciones # Aqui te entrega la lista con los movs. validos
+
+    def dibujar(self, turno, m_gato, m_raton): # Es como el monitor del juego, y necesita tres datos para funcionar, el turno actual y quien esta controlando al gato y al raton
+        """Interfaz visual adaptable."""
+        os.system('cls' if os.name == 'nt' else 'clear') # Esta linea se encarga de borrar todo lo que hay en la consola despues de cada turno
+        info = f" TURNO: {turno:2} | GATO: {m_gato:8} | RATÓN: {m_raton:8} "
+        ancho = max(len(info), self.tamano * 3) # En estas lineas se prepara el marcador, el marco del mismo se ajusta segun el tamaño del mapa
+        
+        print(f"╔{'═' * ancho}╗")
+        print(f"║{info.center(ancho)}║") # Estos son los los borde de nuestro marcador
+        print(f"╚{'═' * ancho}╝")
+        
+        for f in range(self.tamano): # Aqui empieza a recorrer el tablero linea por linea y prepara un reglon vacio para empezar a colocar los iconos
+            fila = ""
+            for c in range(self.tamano):
+                p = [f, c]
+                if p == self.pos_gato: fila += "🐱 "
+                elif p == self.pos_raton: fila += "🐭 "
+                elif p == self.salida: fila += "🚪 " # Esta parte mediante validaciones de posicion o de si existe en x lista, coloca los iconos corresp. a cada parte del mapa
+                elif p in self.quesos: fila += "🧀 "
+                elif p in self.paredes: fila += "⬛ " # Dato: esta parte del codigo usa abstraccion al coordenadas en lo que buscamos
+                else: fila += "⬜ "
+            print(fila) # Y se imprime el mapa en la pantalla
