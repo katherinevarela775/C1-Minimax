@@ -142,3 +142,72 @@ class Laberinto:
             elif self.pos_raton in self.quesos: self.quesos.remove(self.pos_raton) # Esto lo que hace es que si la posicion del raton coincide con la del queso, se remueve el queso de esa posicion
         else:
             self.pos_gato = mejor_m
+
+def control_manual(juego, pos, rival, es_g): # Es el que recibe las ordenes del jugador y las traduce en movimientos del personaje, necesita acceso a todo el juego, saber la posicion, saber donde esta el enemigo y saber a quien esta manejando 
+    controles = {'w':(-1,0), 's':(1,0), 'a':(0,-1), 'd':(0,1)} # Es el diccionario que guarda la traduccion de las teclas ea movimientos
+
+    while True: # El bucle se mantiene hasta que hay una orden valida
+        muda = input(f"\n Mover {'GATO' if es_g else 'RATÓN'} (W/A/S/D): ").lower() # El programa se detiene y parpadea un cursor para que el usuario ingrese un input, y usa el .lower para que detecte que teclas minusculas tambien
+        
+        if muda in controles: # Valida de si la tecla presionada se encuentra entre las teclas validas
+            n = [pos[0]+controles[muda][0], pos[1]+controles[muda][1]] # Aqui lo que sucede es la parte en donde el programa calcula la posicion a la que se va a mover teniendo en cuenta la tecla presionada y la coordenada actual
+            if n in juego.movimientos_posibles(pos, rival, es_g): return n # Es una validacion de si la posicion calculada, es un movimiento posible 
+        print(" ¡Movimiento inválido!")
+
+def jugar(): # Es la funcion que pone en marcha todo lo que definimos en la clase
+    os.system('cls' if os.name == 'nt' else 'clear') #Aqui limpia lo que hay en la consola para inciar el programa de forma limpia
+    print("--- BIENVENIDO A CAT & MOUSE: THE CHASE ---")
+    
+    try:
+        t_inp = input("\n¿Tamaño del tablero? (ej. 10): ")
+        tam = int(t_inp) if t_inp.isdigit() else 10 # Esta es la parte que le pregunta al usuario el tamaño del mapa, en caso de no ingresar un numero, usa el tama;o de 10 de forma predeterminada para que el no tirar un error
+    except: tam = 10
+
+    print("\n[1] Jugar como RATÓN  \n[2] Jugar como GATO \n[3] Ser ESPECTADOR")
+    op = input("Selecciona modo (1, 2 o 3): ") # Aqui le pregunta al usuario que modo de juego quiere y guarda la info en la variable op
+    
+    juego = Laberinto(tamano=tam) # Es el objeto que contiene a todo el laberinto
+    historial = {} # Es un diccionario que se usa para detectar si los personajes se quedan trabados haciendo el mismo movimiento
+    
+    for t in range(1, 80): #Es el limite de turnos del juego, si se llega al limite de turnos, el juego se termina
+        estado = (tuple(juego.pos_gato), tuple(juego.pos_raton))
+        historial[estado] = historial.get(estado, 0) + 1 # En esta parte del codigo se evita lo bucles al tener un historial en donde si un mismo movimiento se repite x cant de veces, se declara un empate tecnico
+        if historial[estado] >= 5:
+            juego.dibujar(t, "EMPATE", "EMPATE"); print("\n🤝 EMPATE por repetición técnica."); return
+
+        # Ajuste de etiquetas
+        if op == "3": m_r, m_g = "IA", "IA"
+        else:
+            m_r = "PLAYER" if op == "1" else "IA" # Esta parte lo que hace es definir que va aparecer en el marcador segun el modo que elijas
+            m_g = "PLAYER" if op == "2" else "IA"
+        
+        juego.dibujar(t, m_g, m_r) # Muestra en pantalla el marcador
+        
+        # TURNO RATÓN
+        if op == "1": 
+            juego.pos_raton = control_manual(juego, juego.pos_raton, juego.pos_gato, False) # Aqui al haber elegido la opcion 1, le pide al jugador que se mueva
+            if juego.pos_raton in juego.quesos: juego.quesos.remove(juego.pos_raton) # Aqui aplica tambien lo de comer los quesos en ese modo tambien
+        else: juego.ejecutar_turno_ia(True) # Si no es la 1, en cualquiera de los casos se ejecuta el raton con minimax
+        
+        if juego.pos_raton == juego.salida:
+            juego.dibujar(t, m_g, m_r)
+            print("\n🏁 FINAL: El Ratón escapó." if op=="3" else "\n🧀 ¡VICTORIA! Escapaste."); return # Esta parte es la que valida si el raton gano y dependiendo del modo que elegiste, te tira un mensaje u otro
+        if juego.pos_gato == juego.pos_raton:
+            juego.dibujar(t, m_g, m_r)
+            print("\n⚔️ FINAL: El gato atrapó al Ratón." if op=="3" else "\n💀 ¡ATRAPADO! El gato ganó."); return
+
+        # TURNO GATO
+        juego.dibujar(t, m_g, m_r)
+        if op == "2": juego.pos_gato = control_manual(juego, juego.pos_gato, juego.pos_raton, True) # Lo mismo que el anterior
+        else: 
+            if op == "3": time.sleep(0.4) # Pero si elegis la opcion 3, coloca un time sleep de 0.4 para que podemos ver bien lo que sucede
+            juego.ejecutar_turno_ia(False)
+
+        if juego.pos_gato == juego.pos_raton:
+            juego.dibujar(t, m_g, m_r) # Validacion de que el gato 
+            print("\n⚔️ FINAL: El gato atrapó al Ratón." if op=="3" else "\n💀 ¡ATRAPADO! El gato ganó."); return # Lo mismo que el anterior del raton
+
+    print("\n🤝 EMPATE: Tiempo agotado.") # Si se llega al limite de turno y la funcion se termina se imprime esta linea
+
+if __name__ == "__main__":
+    jugar()
