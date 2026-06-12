@@ -35,7 +35,7 @@ class Laberinto:
 
         for actual in cola: # Sirve para ir revisando los caminos a lo largo del mapa
             if actual == fin: return True # Si al momento de iterar el mapa llega a la posicion de la salida la iteracion termina
-            for vecino in self.movimientos_posibles(actual, [], es_gato=False): # Desde el punto en el que se encuentra, mira a las 4 direcciones posibles y la funcion de movimientos posibles filtara las paredes y bordes
+            for vecino in self.movimientos_posibles(actual, [], es_gato=False):
                 if vecino not in visitados: # Si la posicion no se encuentra en visitados la agrega y tambien a la lista de cola para revisarla a profundidad
                     visitados.append(vecino)
                     cola.append(vecino)
@@ -56,8 +56,7 @@ class Laberinto:
             if 0 <= nueva_pos[0] < self.tamano and 0 <= nueva_pos[1] < self.tamano:# Esta validacion camprueba de que la posicion no se salga del tablero
                 if nueva_pos not in self.paredes: # Validacion de si existe una pared en esa posicion
                     if not es_gato and nueva_pos == oponente: continue # Aqui lo que hace es que en caso de ser el raton y querer moverse a la posicion del gato, el continue hace que pase a otra posicion 
-                    opciones.append(nueva_pos) # Si el movimiento paso todas las validaciones se guarda en opciones
-        return opciones # Aqui te entrega la lista con los movs. validos
+                    opciones.append(nueva_pos) s
 
     def dibujar(self, turno, m_gato, m_raton): # Es como el monitor del juego, y necesita tres datos para funcionar, el turno actual y quien esta controlando al gato y al raton
         """Interfaz visual adaptable."""
@@ -80,3 +79,36 @@ class Laberinto:
                 elif p in self.paredes: fila += "⬛ " # Dato: esta parte del codigo usa abstraccion al coordenadas en lo que buscamos
                 else: fila += "⬜ "
             print(fila) # Y se imprime el mapa en la pantalla
+
+    def puntuar_estado(self, es_raton): # Es como un juez, el cual como dato necesita saber si a quien juzga
+        """Heurística: Sistema de valores de la IA."""
+        dist_gr = abs(self.pos_gato[0]-self.pos_raton[0]) + abs(self.pos_gato[1]-self.pos_raton[1]) # Aqui se calcula la dist. Manhattan en donde sumamos la cnat. de pasos en hor. y vert. 
+        dist_rs = abs(self.pos_raton[0]-self.salida[0]) + abs(self.pos_raton[1]-self.salida[1]) # dist_gr: Dist. entre el gato y el raton; dist_rs: Dist. entre el raton y la salida
+        
+        if es_raton: # ("Psicologia del Raton")
+            penalizacion = self.memoria_raton.count(self.pos_raton) * 50 # Penalizacion por repetir una casilla en la que estuvo hace poco 
+            return (dist_gr * 5) - (dist_rs * 60) - penalizacion + random.randint(0,5) # - penalizacion: Si el raton estuvo hace poco en esa casilla pierde puntos 
+        else:
+            return -(dist_gr * 200) + random.randint(0,5) # -(dist_gr * 200): Esto aplica al gato, cuan mayor sea la distancia, menor sera su puntaje, lo que hace que prioreice reducir la distancia
+
+    def ia_decidir(self, profundidad, es_max): # Es un simulador de que pasaria si, recibe los datos de profundidad y de si es max, si max = True saca la nota mas alta, y si es false dara la nota mas baja
+        """Simulador Minimax."""
+        if self.pos_gato == self.pos_raton: return -20000 # Antes de ejecutarse valida los caos finales de si gano el gato(-2000) o el raton (2000)
+        if self.pos_raton == self.salida: return 20000
+        if profundidad == 0: return self.puntuar_estado(es_max) # Si la profundidad llego a cero y utiliza la funcion de evaluar estado para ver quien esta en la mejor psoicion en ese momento
+
+        mejor_valor = float('-inf') if es_max else float('inf') # Aqui define el punto de partida segun quien sea, si es max empieza con el num mas pequeño (- infinito), y si es min con el mas grande (infinito)
+        yo = self.pos_raton if es_max else self.pos_gato
+        el_otro = self.pos_gato if es_max else self.pos_raton
+        
+        for mov in self.movimientos_posibles(yo, el_otro, es_gato=not es_max): # Aqui inicia la ramificacion donde se abre el abanico de posibilidades que tiene en ese turno imaginario
+            pos_original = list(yo) # Aqui la IA mueve la pieza en el tablero virtual
+            if es_max: self.pos_raton = mov
+            else: self.pos_gato = mov
+            
+            valor = self.ia_decidir(profundidad - 1, not es_max) # Aqui ocurre la recursividad, la funcion se llama a si misma, para imaginar que haria el oponente desde esta nueva posicion que imagino
+            mejor_valor = max(mejor_valor, valor) if es_max else min(mejor_valor, valor) 
+            
+            if es_max: self.pos_raton = pos_original 
+            else: self.pos_gato = pos_original
+        return mejor_valor 
