@@ -56,7 +56,7 @@ class Laberinto:
             if 0 <= nueva_pos[0] < self.tamano and 0 <= nueva_pos[1] < self.tamano:# Esta validacion camprueba de que la posicion no se salga del tablero
                 if nueva_pos not in self.paredes: # Validacion de si existe una pared en esa posicion
                     if not es_gato and nueva_pos == oponente: continue # Aqui lo que hace es que en caso de ser el raton y querer moverse a la posicion del gato, el continue hace que pase a otra posicion 
-                    opciones.append(nueva_pos) s
+                    opciones.append(nueva_pos) 
 
     def dibujar(self, turno, m_gato, m_raton): # Es como el monitor del juego, y necesita tres datos para funcionar, el turno actual y quien esta controlando al gato y al raton
         """Interfaz visual adaptable."""
@@ -112,3 +112,33 @@ class Laberinto:
             if es_max: self.pos_raton = pos_original 
             else: self.pos_gato = pos_original
         return mejor_valor 
+    
+    def ejecutar_turno_ia(self, es_raton): # Es la que toma decision final y mueve la pieza fisicamente en el tablero, recibe el dato de que personaje es para saber que logica ejecutar
+        """Toma de decisión oficial."""
+        yo = self.pos_raton if es_raton else self.pos_gato # Aqui lo primero que hace es reconocerse a si misma y al rival
+        el_otro = self.pos_gato if es_raton else self.pos_raton
+        prof = 3 if es_raton else 4 # Define que tan inteligente sera cada uno (cuantos paso en el futuro vera cada personaje)
+        
+        mejor_m, mejor_p = yo, (float('-inf') if es_raton else float('inf')) # mejor_m guardará el mejor movimiento encontrado y mejor_p la mejor puntuación. Se empieza con el peor o mejor valor posible, para que asi cualquier opcion lo supere de inmediato
+        
+        for m in self.movimientos_posibles(yo, el_otro, es_gato=not es_raton): # Este bucle mira los movimientos que puede hacer ahora mismo
+
+            original = list(yo) # Aqui guarda la posicion real de la pieza, antes de realizar las simulaciones
+            if es_raton: self.pos_raton = m # Para cada mov. posible le pregunta a la funcion de ia_decidir de si es conveniente
+            else: self.pos_gato = m  
+
+            puntuacion = self.ia_decidir(prof, not es_raton)
+
+            if (es_raton and puntuacion > mejor_p) or (not es_raton and puntuacion < mejor_p):
+                mejor_p, mejor_m = puntuacion, m # Si el el raton o el gato encuentran una mejor puntuacion a la que tenian anotada, actualizan su mejor opcion
+            elif es_raton: # Aqui deshace el movimiento de prueba 
+                self.pos_raton = original
+            else: self.pos_gato = original
+            
+        if es_raton:
+            self.pos_raton = mejor_m
+            self.memoria_raton.append(list(mejor_m)) # El raton finalmente cambia su posicion en el mapa y anota la misma en la lista para no repetirla
+            if len(self.memoria_raton) > 5: self.memoria_raton.pop(0) # Es el límite de la "memoria a corto plazo" del ratón. Solo recuerda los últimos 5 pasos que dio. Y el pop elimina el recuerdo mas viejo
+            elif self.pos_raton in self.quesos: self.quesos.remove(self.pos_raton) # Esto lo que hace es que si la posicion del raton coincide con la del queso, se remueve el queso de esa posicion
+        else:
+            self.pos_gato = mejor_m
